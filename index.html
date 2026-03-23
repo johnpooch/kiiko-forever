@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KiiKO Forever</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="main">
+    <!-- Layer 2: Katakana cascade (front) — populated by JS -->
+    <div class="cascade" id="cascade" aria-hidden="true"></div>
+
+    <!-- Layer 1: Content (back) -->
+    <div class="content">
+      <div class="content-top">
+        <!-- Nav links -->
+        <nav class="nav-links">
+          <a href="https://open.spotify.com/artist/1d6oAwrCelcwZHgQk2ZHsY">Mus<em class="double-i">ii</em>c ♪(・ω・)</a>
+          <a href="https://www.youtube.com/@KiiKO_music">V<em class="double-i">ii</em>deo (⌐■_■)</a>
+          <a href="https://kiiko-ongaku.bandcamp.com/track/kiiko-forever">Store (づ ̄ ³ ̄)づ</a>
+          <a href="https://1drv.ms/f/c/DFD959DB4EA1BA02/IgBv4iQPLJ38ToL16LGiHrWGAXXgP1r7S58KuqUT_PUxZYU?e=6UYwqR">Press m(_ _)m</a>
+        </nav>
+
+        <!-- Press photo -->
+        <img class="press-photo" src="images/press-shot-1.jpg" alt="KiiKO press photo">
+
+        <!-- Kaomoji cluster -->
+        <div class="kaomoji-cluster">゜ﾟ**ﾟ
+. · ✦  . · * .
+(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
+☆ﾟ.*・｡ﾟ
+♪♫•*¨*•.¸¸♪
+✧･: *✧:*</div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <a href="https://www.instagram.com/kiiko_ongaku/"><em class="double-i">ii</em>nstagram [◉°]</a>
+        <a href="https://www.tiktok.com/@kiiko.music">T<em class="double-i">ii</em>kTok (〜￣▽￣)〜</a>
+        <a href="mailto:kiiko.music@outlook.com">Contact ✉(•ω•✉)</a>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const COLOURS = ['#ff2d2d', '#ff8c00', '#ffd700', '#00c04b', '#0077ff', '#8b00ff', '#ff69b4'];
+      const EN_TEXT = 'KiiKO Forever';
+      const JP_TEXT = 'キーコ・フォーエバー';
+      const EN_OFFSET = 0;
+      const JP_OFFSET = 5;
+
+      function getColour(charIndex, offset) {
+        return COLOURS[(charIndex + offset) % 7];
+      }
+
+      // ─── Katakana cascade generator ───
+
+      function buildCascade() {
+        const container = document.getElementById('cascade');
+
+        // Measure English line width
+        const measureEn = document.createElement('span');
+        measureEn.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-family:"PP Kyoto",sans-serif;font-weight:500;font-size:18px;';
+        measureEn.textContent = EN_TEXT;
+        document.body.appendChild(measureEn);
+        const enWidth = measureEn.getBoundingClientRect().width;
+
+        // Measure Japanese line width at natural spacing
+        const measureJp = document.createElement('span');
+        measureJp.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-family:"PP Kyoto",sans-serif;font-weight:300;font-size:15px;';
+        measureJp.textContent = JP_TEXT;
+        document.body.appendChild(measureJp);
+        const jpWidth = measureJp.getBoundingClientRect().width;
+
+        // Clean up measurement elements
+        document.body.removeChild(measureEn);
+        document.body.removeChild(measureJp);
+
+        // Calculate letter-spacing for Japanese lines to match English width
+        const jpCharCount = JP_TEXT.length;
+        const letterSpacing = (enWidth - jpWidth) / jpCharCount;
+
+        // Calculate rows needed to fill viewport
+        const lineHeight = 15 * 1.1;
+        const rowCount = Math.ceil(window.innerHeight / lineHeight) + 5;
+
+        // Build HTML
+        let html = '';
+
+        // Row 1: English line with double-i on "KiiKO"
+        html += '<span class="cascade-line cascade-line--en">';
+        for (let i = 0; i < EN_TEXT.length; i++) {
+          const ch = EN_TEXT[i];
+          const colour = getColour(i, EN_OFFSET);
+          if (i === 1) html += '<em class="double-i">';
+          html += '<span style="color:' + colour + '">' + ch + '</span>';
+          if (i === 2) html += '</em>';
+        }
+        html += '</span>';
+
+        // Rows 2+: Japanese lines
+        for (let row = 1; row < rowCount; row++) {
+          html += '<span class="cascade-line" style="letter-spacing:' + letterSpacing.toFixed(2) + 'px">';
+          for (let i = 0; i < JP_TEXT.length; i++) {
+            const ch = JP_TEXT[i];
+            const colour = getColour(i, JP_OFFSET);
+            html += '<span style="color:' + colour + '">' + ch + '</span>';
+          }
+          html += '</span>';
+        }
+
+        container.innerHTML = html;
+      }
+
+      // ─── Link character splitting for hover rainbow ───
+
+      function wrapCharsForHover() {
+        const links = document.querySelectorAll('.nav-links a, .footer a');
+
+        links.forEach(link => {
+          let charIndex = 0;
+          const newNodes = [];
+
+          function processNode(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              const text = node.textContent;
+              const frag = document.createDocumentFragment();
+              for (let i = 0; i < text.length; i++) {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.style.setProperty('--char-color', getColour(charIndex, 0));
+                span.textContent = text[i];
+                frag.appendChild(span);
+                charIndex++;
+              }
+              return frag;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              const clone = node.cloneNode(false);
+              node.childNodes.forEach(child => {
+                clone.appendChild(processNode(child));
+              });
+              return clone;
+            }
+            return node.cloneNode(true);
+          }
+
+          const frag = document.createDocumentFragment();
+          link.childNodes.forEach(child => {
+            frag.appendChild(processNode(child));
+          });
+          link.innerHTML = '';
+          link.appendChild(frag);
+        });
+      }
+
+      // ─── Init ───
+
+      buildCascade();
+      wrapCharsForHover();
+    });
+  </script>
+</body>
+</html>
