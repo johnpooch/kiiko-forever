@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja" translate="no">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google" content="notranslate">
   <title>KiiKO Forever</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -82,9 +83,10 @@
         const jpCharCount = JP_TEXT.length;
         const letterSpacing = (enWidth - jpWidth) / jpCharCount;
 
-        // Calculate rows needed to fill viewport
+        // Calculate rows needed to fill viewport (visualViewport accounts for mobile toolbars)
         const lineHeight = 15 * 1.1;
-        const rowCount = Math.ceil(window.innerHeight / lineHeight) + 5;
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const rowCount = Math.ceil(vh / lineHeight) + 5;
 
         // Build HTML
         let html = '';
