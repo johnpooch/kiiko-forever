@@ -61,28 +61,6 @@
       function buildCascade() {
         const container = document.getElementById('cascade');
 
-        // Measure English line width
-        const measureEn = document.createElement('span');
-        measureEn.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-family:"PP Kyoto",sans-serif;font-weight:500;font-size:18px;';
-        measureEn.textContent = EN_TEXT;
-        document.body.appendChild(measureEn);
-        const enWidth = measureEn.getBoundingClientRect().width;
-
-        // Measure Japanese line width at natural spacing
-        const measureJp = document.createElement('span');
-        measureJp.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-family:"PP Kyoto",sans-serif;font-weight:300;font-size:15px;';
-        measureJp.textContent = JP_TEXT;
-        document.body.appendChild(measureJp);
-        const jpWidth = measureJp.getBoundingClientRect().width;
-
-        // Clean up measurement elements
-        document.body.removeChild(measureEn);
-        document.body.removeChild(measureJp);
-
-        // Calculate letter-spacing for Japanese lines to match English width
-        const jpCharCount = JP_TEXT.length;
-        const letterSpacing = (enWidth - jpWidth) / jpCharCount;
-
         // Calculate rows needed to fill viewport (visualViewport accounts for mobile toolbars)
         const lineHeight = 15 * 1.1;
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -104,7 +82,7 @@
 
         // Rows 2+: Japanese lines
         for (let row = 1; row < rowCount; row++) {
-          html += '<span class="cascade-line" style="letter-spacing:' + letterSpacing.toFixed(2) + 'px">';
+          html += '<span class="cascade-line">';
           for (let i = 0; i < JP_TEXT.length; i++) {
             const ch = JP_TEXT[i];
             const colour = getColour(i, JP_OFFSET);

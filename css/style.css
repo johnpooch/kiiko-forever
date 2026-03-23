@@ -107,7 +107,7 @@ body {
   pointer-events: none;
   user-select: none;
   line-height: 1.1;
-  font-size: 17px;
+  font-size: 18px;
   font-family: var(--font-family);
   font-weight: var(--font-light);
   padding: 16px 0 0 16px;
@@ -116,6 +116,10 @@ body {
 .cascade-line {
   display: block;
   white-space: nowrap;
+}
+
+.cascade-line:not(.cascade-line--en) {
+  letter-spacing: -4.5px;
 }
 
 .cascade-line--en {
