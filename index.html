@@ -27,12 +27,14 @@
         <img class="press-photo" src="images/press-shot-1.jpg" alt="KiiKO press photo">
 
         <!-- Kaomoji cluster -->
-        <div class="kaomoji-cluster">゜ﾟ**ﾟ
-. · ✦  . · * .
-(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
-☆ﾟ.*・｡ﾟ
-♪♫•*¨*•.¸¸♪
-✧･: *✧:*</div>
+        <div class="kaomoji-cluster">
+          <span class="kaomoji-line">゜ﾟ**ﾟ</span>
+          <span class="kaomoji-line">. · ✦  . · * .</span>
+          <span class="kaomoji-line">(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</span>
+          <span class="kaomoji-line">☆ﾟ.*・｡ﾟ</span>
+          <span class="kaomoji-line">♪♫•*¨*•.¸¸♪</span>
+          <span class="kaomoji-line">✧･: *✧:*</span>
+        </div>
       </div>
 
       <!-- Footer -->
@@ -52,8 +54,15 @@
       const EN_OFFSET = 0;
       const JP_OFFSET = 5;
 
+      // Glitch characters: symbols + katakana fragments
+      const GLITCH_CHARS = '—~±§|[].+×%•キコフエバーォ';
+
       function getColour(charIndex, offset) {
         return COLOURS[(charIndex + offset) % 7];
+      }
+
+      function randomGlitchChar() {
+        return GLITCH_CHARS[~~(Math.random() * GLITCH_CHARS.length)];
       }
 
       // ─── Katakana cascade generator ───
@@ -61,12 +70,10 @@
       function buildCascade() {
         const container = document.getElementById('cascade');
 
-        // Calculate rows needed to fill viewport (visualViewport accounts for mobile toolbars)
         const lineHeight = 15 * 1.1;
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const rowCount = Math.ceil(vh / lineHeight) + 5;
 
-        // Build HTML
         let html = '';
 
         // Row 1: English line with double-i on "KiiKO"
@@ -94,14 +101,13 @@
         container.innerHTML = html;
       }
 
-      // ─── Link character splitting for hover rainbow ───
+      // ─── Character splitting (links + kaomoji lines) ───
 
       function wrapCharsForHover() {
-        const links = document.querySelectorAll('.nav-links a, .footer a');
+        const elements = document.querySelectorAll('.nav-links a, .footer a, .kaomoji-line');
 
-        links.forEach(link => {
+        elements.forEach(el => {
           let charIndex = 0;
-          const newNodes = [];
 
           function processNode(node) {
             if (node.nodeType === Node.TEXT_NODE) {
@@ -127,18 +133,138 @@
           }
 
           const frag = document.createDocumentFragment();
-          link.childNodes.forEach(child => {
+          el.childNodes.forEach(child => {
             frag.appendChild(processNode(child));
           });
-          link.innerHTML = '';
-          link.appendChild(frag);
+          el.innerHTML = '';
+          el.appendChild(frag);
         });
       }
 
-      // ─── Init ───
+      // ─── Glitch text effect ───
 
-      buildCascade();
-      wrapCharsForHover();
+      function glitchText(el, duration) {
+        const chars = el.querySelectorAll('.char');
+        if (!chars.length) return;
+
+        // Store originals once (skip if already stored from a previous run)
+        chars.forEach(ch => {
+          if (!ch.dataset.original) ch.dataset.original = ch.textContent;
+        });
+
+        const total = chars.length;
+        const startTime = performance.now();
+
+        // Immediately scramble everything
+        chars.forEach(ch => {
+          if (ch.dataset.original !== ' ' && ch.dataset.original !== '\n') {
+            ch.textContent = randomGlitchChar();
+          }
+        });
+
+        function tick(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          // The "cursor" position — which character index we've resolved up to
+          const resolved = Math.floor(progress * total);
+
+          for (let i = 0; i < total; i++) {
+            const ch = chars[i];
+            const orig = ch.dataset.original;
+
+            if (orig === ' ' || orig === '\n') continue;
+
+            if (i < resolved) {
+              // Behind cursor: show original
+              ch.textContent = orig;
+            } else if (i < resolved + 3) {
+              // Near cursor: active scramble zone (re-randomize each frame)
+              ch.textContent = randomGlitchChar();
+            }
+            // Ahead of cursor: keep initial scramble (don't update every frame)
+          }
+
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            // Ensure all characters are resolved
+            chars.forEach(ch => { ch.textContent = ch.dataset.original; });
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      // ─── Glitch cascade on load ───
+
+      function glitchCascade(duration) {
+        const lines = document.querySelectorAll('.cascade-line');
+        const spans = document.querySelectorAll('.cascade-line > span, .cascade-line > em > span');
+        if (!spans.length) return;
+
+        spans.forEach(sp => {
+          if (!sp.dataset.original) sp.dataset.original = sp.textContent;
+          sp.textContent = randomGlitchChar();
+        });
+
+        const total = spans.length;
+        const startTime = performance.now();
+
+        function tick(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const resolved = Math.floor(progress * total);
+
+          for (let i = 0; i < total; i++) {
+            const sp = spans[i];
+            const orig = sp.dataset.original;
+            if (i < resolved) {
+              sp.textContent = orig;
+            } else if (i < resolved + 5) {
+              sp.textContent = randomGlitchChar();
+            }
+          }
+
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            spans.forEach(sp => { sp.textContent = sp.dataset.original; });
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      // ─── Hover glitch binding ───
+
+      function bindHoverGlitch() {
+        const targets = document.querySelectorAll('.nav-links a, .footer a, .kaomoji-line');
+        targets.forEach(el => {
+          el.addEventListener('mouseenter', () => glitchText(el, 300));
+        });
+      }
+
+      // ─── Init (wait for fonts) ───
+
+      document.fonts.ready.then(() => {
+        const main = document.querySelector('.main');
+
+        buildCascade();
+        wrapCharsForHover();
+
+        // Show the page — glitch animation IS the reveal
+        main.classList.add('ready');
+
+        // Staggered glitch-reveal on page load
+        const loadTargets = document.querySelectorAll('.nav-links a, .footer a, .kaomoji-line');
+        loadTargets.forEach((el, i) => {
+          setTimeout(() => glitchText(el, 800), i * 120);
+        });
+        glitchCascade(1200);
+
+        bindHoverGlitch();
+      });
     });
   </script>
 </body>
